@@ -48,25 +48,14 @@ class Game(object):
             if iter_idx % log_v == 0 and self.verbose:
                 print("iter {}/{}".format(iter_idx, n_iter))
 
-            # forget
-            while self.alarm_queue[0][2] <= iter_idx:
-                ag_idx, fact_idx, iter_alarm = self.alarm_queue.pop(0)
-                if iter_alarm == self.ag_fact_alarm[ag_idx][fact_idx]:
-                    for ag_tmp in self.fact_2_ag[fact_idx]:
-                        self.inter_minus(ag_idx, ag_tmp)
-                    self.fact_2_ag[fact_idx].remove(ag_idx)
-                    self.ags[ag_idx].remove(fact_idx)
-                    self.ag_fact_alarm[ag_idx][fact_idx] = -1
-
             ag_order = np.arange(self.n)
             np.random.shuffle(ag_order)
             for ag_idx in ag_order:
                 # select an agent to interact with
                 total_s_facts = sum([len(self.fact_2_ag[fact_idx]) for fact_idx in self.ags[ag_idx]])
                 p_arr = self.inter[ag_idx]/total_s_facts
+                assert np.sum(self.inter[ag_idx]) == total_s_facts
                 p_arr[np.argmax(p_arr)] += 1-np.sum(p_arr) # adjust to make its sum be exactly 1.0
-                # print(p_arr, np.sum(p_arr))
-                # assert np.sum(p_arr) == 1
                 ag2_idx = np.random.choice(np.arange(self.n), p=p_arr)
                 
                 # select a choice
@@ -108,6 +97,16 @@ class Game(object):
                 else:
                     self.alarm_queue.append((ag_idx, fact_idx, next_alarm))
                     self.ag_fact_alarm[ag_idx][fact_idx] = next_alarm
+            
+            # forget
+            while self.alarm_queue[0][2] <= iter_idx:
+                ag_idx, fact_idx, iter_alarm = self.alarm_queue.pop(0)
+                if iter_alarm == self.ag_fact_alarm[ag_idx][fact_idx]:
+                    for ag_tmp in self.fact_2_ag[fact_idx]:
+                        self.inter_minus(ag_idx, ag_tmp)
+                    self.fact_2_ag[fact_idx].remove(ag_idx)
+                    self.ags[ag_idx].remove(fact_idx)
+                    self.ag_fact_alarm[ag_idx][fact_idx] = -1
         
         if self.verbose:
             self.print_board()
@@ -188,7 +187,7 @@ if __name__ == "__main__":
         for n in SYSTEM_SIZE:
             results = [[], [], []]
             for trail_ctr in range(N_TRAIL):
-                game = Game(m, n, random_seed=trail_ctr, verbose=False)
+                game = Game(m, n, random_seed=trail_ctr+100, verbose=False)
                 game.simulate(N_ITER)
                 cul, diff, avg_gp_size = game.get_result_indicators()
                 results[0].append(cul)
@@ -200,7 +199,3 @@ if __name__ == "__main__":
                 np.mean(np.array(results[1])), np.std(np.array(results[1]))] + results[1])
             out_writer.writerow([m, n, "group size", N_TRAIL, \
                 np.mean(np.array(results[2])), np.std(np.array(results[2]))] + results[2])
-
-
-
-        
