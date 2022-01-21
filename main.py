@@ -127,9 +127,11 @@ class Game(object):
         # 1. Cultural homogeneity
         s_sum = 0
         for i in range(self.n):
-            for j in range(i, self.n):
+            for j in range(i+1, self.n):
                 s_sum += self.inter[i][j]
-        culture = s_sum / (self.k*self.n*(self.n-1)/2)
+        effective_k = sum([1 for ag_set in self.fact_2_ag if len(ag_set)])
+        culture = s_sum / (effective_k*self.n*(self.n-1)/2)
+        print("(K, effect_K) = ({}, {}); cul = {}".format(self.k, effective_k, culture))
 
         # 2 & 3. social differentiation & group size
         group_list = self.get_group_list()
