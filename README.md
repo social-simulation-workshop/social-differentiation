@@ -1,1 +1,1 @@
-# social_differentiation
+# social-differentiation
